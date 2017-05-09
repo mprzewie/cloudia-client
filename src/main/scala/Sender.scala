@@ -4,35 +4,25 @@ import java.io.File
 
 import akka.actor._
 
+import com.typesafe.config.ConfigFactory
+import communication.Cloudia
 
 
 /**
   * Created by marcin on 5/6/17.
   */
-class Sender(implicit val host: String, implicit val port: Int) extends Actor{
-  def addressOf(actorName: String) = s"$protocol://$system@$host:$port/user/$actorName"
-  val protocol="akka.tcp"
-  val system="cloudia-server"
-  val receiverName="manifesto-receiver"
 
-  val remote: ActorSelection = context.actorSelection(addressOf(receiverName))
-
-  override def receive: PartialFunction[Any, Unit] = {
-    case "ready" =>
-      println("received ok")
-    case msg: String =>
-      println(s"Sender received '$msg'")
-      remote ! FileManifesto(new File("build.sbt"), 1024)
-  }
-}
 
 object Main extends App {
-  implicit val system = ActorSystem("cloudia-client")
-  implicit val host = "127.0.0.1"
-  implicit val port = 8888
-  val sender =system.actorOf(Props(new Sender), name = "sender")
+  implicit val host = ConfigFactory.load().getString("akka.remote.netty.tcp.hostname")
+  implicit val port = ConfigFactory.load().getString("akka.remote.netty.tcp.port").toInt
+  implicit val chunkSize: Long = 1024
+  val system = ActorSystem("cloudia-server")
+  val cloudia = system.actorOf(Props(new Cloudia()), name = "local")
 
-  sender ! "start!"
+//  val cloudia2 = system.actorOf(Props(new Cloudia()), name = "remote")
+//  cloudia ! system.actorSelection(cloudia2.path)
+  cloudia ! system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/receiver")
 
 
 
