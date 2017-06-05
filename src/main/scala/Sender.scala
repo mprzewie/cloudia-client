@@ -3,9 +3,13 @@
 import java.io.File
 
 import akka.actor._
-
 import com.typesafe.config.ConfigFactory
-import communication.Cloudia
+import communication.{Handshake, Node, Request}
+import index.DirectoryIndex
+import akka.pattern.{ask, pipe}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 
 /**
@@ -16,16 +20,13 @@ import communication.Cloudia
 object Main extends App {
   implicit val host = ConfigFactory.load().getString("akka.remote.netty.tcp.hostname")
   implicit val port = ConfigFactory.load().getString("akka.remote.netty.tcp.port").toInt
-  implicit val chunkSize: Long = 1024
-  val system = ActorSystem("cloudia-server")
-  val cloudia = system.actorOf(Props(new Cloudia()), name = "local")
+  implicit val chunkSize: Int = 100
 
-//  val cloudia2 = system.actorOf(Props(new Cloudia()), name = "remote")
-//  cloudia ! system.actorSelection(cloudia2.path)
-  cloudia ! system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/receiver")
-
-
-
-
-
+  val system = ActorSystem("cloudia-client")
+  val cloudia = system.actorOf(Props(classOf[Node], chunkSize, "/home/marcin/Documents/Coding/cloudia/test1"), name = "local")
+  val server = system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/receiver")
+  val index = Await.result(server.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)
+  index.subDirectories.foreach(println(_))
+  index.subFiles.foreach(println(_))
+  server.tell(Request(index.subDirectories.head.subFiles.head), cloudia)
 }
