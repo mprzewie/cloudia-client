@@ -18,13 +18,12 @@ import scala.concurrent.duration._
 
 
 object Main extends App {
-  implicit val host = ConfigFactory.load().getString("akka.remote.netty.tcp.hostname")
-  implicit val port = ConfigFactory.load().getString("akka.remote.netty.tcp.port").toInt
+
   implicit val chunkSize: Int = 100
 
   val system = ActorSystem("cloudia-client")
-  val cloudia = system.actorOf(Props(classOf[Node], chunkSize, "/home/marcin/Documents/Coding/cloudia/test1"), name = "local")
-  val server = system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/receiver")
+  val cloudia = system.actorOf(Node.props("/home/marcin/Documents/Coding/cloudia/test1"), name = "client")
+  val server = system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/server")
   val index = Await.result(server.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)
   index.subDirectories.foreach(println(_))
   index.subFiles.foreach(println(_))
