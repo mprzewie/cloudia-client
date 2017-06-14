@@ -1,0 +1,15 @@
+//- attributes("title") = "Scalatra: a tiny, Sinatra-like web framework for Scala"
+//- attributes("headline") = "head"
+//- attributes()
+-import index._
+
+-@ val index:DirectoryIndex
+
+h1= "index of " + index.handler.getName
+
+-for(i <- index.subDirectories)
+    p
+        a(href={i.handler.getName})= i.handler.getName
+
+-for(i <- index.subFiles)
+    p=i.handler.getName

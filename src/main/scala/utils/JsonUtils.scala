@@ -1,4 +1,4 @@
-package cloudia
+package utils
 
 import index._
 
@@ -7,7 +7,7 @@ import scala.util.parsing.json.{JSONArray, JSONObject}
 /**
   * Created by marcin on 6/12/17.
   */
-object Jason {
+object JsonUtils {
 
   def toJson(index: Index): JSONObject = {
     val name = index.handler.getName
