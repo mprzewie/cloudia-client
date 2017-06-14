@@ -1,15 +1,22 @@
-//- attributes("title") = "Scalatra: a tiny, Sinatra-like web framework for Scala"
-//- attributes("headline") = "head"
-//- attributes()
 -import index._
 
 -@ val index:DirectoryIndex
 
-h1= "index of " + index.handler.getName
+h1= "Home Node:"
+h2="~/" + index.path
 
 -for(i <- index.subDirectories)
     p
-        a(href={i.handler.getName})= i.handler.getName
+        a(href={i.handler.getName})
+            =i.handler.getName
+        form(method="POST")
+            input(hidden=true name="file" value={i.handler.getName})
+            input(type="submit" value="push" )
 
 -for(i <- index.subFiles)
-    p=i.handler.getName
+    p
+        a
+            =i.handler.getName
+        form(method="POST")
+            input(hidden=true name="file" value={i.handler.getName})
+            input(type="submit" value="push" )

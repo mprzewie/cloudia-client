@@ -22,30 +22,9 @@ class CloudiaClientServlet extends CloudiaclientStack {
   val system = ActorSystem("cloudia-client")
   val server = system.actorSelection("akka.tcp://cloudia-server@127.0.0.1:8888/user/server")
 
-
-
-  get("/") {
-    contentType="text/html"
-    try {
-      val futureIndex = server.ask(Handshake())(1 second).mapTo[DirectoryIndex]
-      val index = Await.result(server.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)
-      println(IndexUtils.toHtml(index))
-      jade("twonodes",
-        "thisNode" -> "this",
-        "thatNode" -> "that",
-        "thisContents" -> IndexUtils.toHtml(index),
-        "thatContents" -> "")
-    }
-    catch {
-      case e:Exception =>
-        jade("error")
-    }
-
-
-
+  get("/*"){
+    redirect("/home/ ")
   }
-
-  get("/home") {redirect("/home/")}
 
   get("/home/*") {
     contentType="text/html"
@@ -56,7 +35,14 @@ class CloudiaClientServlet extends CloudiaclientStack {
       case Some(found) => jade("homeindex", "index" -> found)
       case _ => "No such directory!"
     }
+  }
 
+  post("/home/*"){
+    val path = multiParams("splat").head
+    val filename = params("file")
+    print("gonna push file ")
+    println(path + "/" + filename)
+    redirect("/home/"+path)
   }
 
 }
