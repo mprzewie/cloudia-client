@@ -11,10 +11,11 @@ h2= "/" + index.path
 
 -for(i <- index.subDirectories)
     p
-        a(href={"/"+servletName+"/" + nodeName+ "/" +i.path})
+        a(href={"/" + servletName+"/" + nodeName+ "/" +i.path})
             =i.handler.getName
         form(method="POST")
-            input(hidden=true name="file" value={i.handler.getName})
+            input(hidden=true name="json" value = '{"foo": "bar"}')
+            input(hidden=true name="filekierwa" value={i.handler.getName})
             input(type="submit" value="push" )
 
 -for(i <- index.subFiles)

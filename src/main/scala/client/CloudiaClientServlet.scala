@@ -1,20 +1,23 @@
 package client
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import communication.Handshake
 import index.DirectoryIndex
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
-import utils.{AppController, IndexUtils, JsonUtils, NodeData}
+import utils.{AppController, IndexUtils, JsonUtils}
+
+import scala.util.Try
 
 
 class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
 
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
-  implicit val system = ActorSystem("cloudia-client")
-  val controller = new AppController()
+  implicit val system = ActorSystem("client")
+  val controller = system.actorOf(AppController.props(), "controller")
+  println(controller.path)
 
   before(){
     contentType="text/html"
@@ -28,34 +31,26 @@ class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
     redirect(s"/$servletName/${params("node")}/ ")
   }
 
-
-
   get("/:node/*") {
     contentType="text/html"
-    val nodeName = params("node")//.head
+    val nodeName = params("node")
     val path = multiParams("splat").head
 
-    controller.nodes().get(nodeName) match {
-      case Some(data) => data.ref match {
-          case Some(actorRef) =>{
-            val index = Await.result(actorRef.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)
-            IndexUtils.indexAt(index, path) match {
-              case Some(found) => jade("nodeindex","servletName" -> servletName, "nodeName" -> nodeName, "index" -> found)
-              case _ => jade("error", "reason" -> "No such directory!")
-            }
+    val nodes = Await.result(controller.ask(Handshake())(1 second).mapTo[Map[String, ActorRef]], 1 second)
+
+    nodes.get(nodeName) match {
+      case Some(actorRef) =>
+        Try(Await.result(actorRef.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)) match {
+          case scala.util.Success(index) => IndexUtils.indexAt(index, path) match {
+            case Some(found) => jade("nodeindex", "servletName" -> servletName, "nodeName" -> nodeName, "index" -> found)
+            case _ => jade("error", "reason" -> "No such directory!")
           }
-          case _ => jade("error", "reason" -> "No such node!")
-        }
+          case _ => jade("error", "reason" -> "Node disconnected!")
+      }
       case _ => jade("error", "reason" -> "No such node!")
     }
-
   }
 
-
-  post("/register"){
-    "registered!"
-
-  }
 
   post("/:node/*"){
     val nodeName = params("node")
@@ -63,7 +58,7 @@ class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
     val filename = params("file")
     print("gonna push file ")
     println(path + "/" + filename)
-    redirect("/home/"+path)
+    redirect(s"/$servletName/home/$path")
   }
 
 
