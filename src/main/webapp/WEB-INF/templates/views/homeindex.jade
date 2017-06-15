@@ -7,7 +7,7 @@ h2="~/" + index.path
 
 -for(i <- index.subDirectories)
     p
-        a(href={i.handler.getName})
+        a(href={i.path})
             =i.handler.getName
         form(method="POST")
             input(hidden=true name="file" value={i.handler.getName})
