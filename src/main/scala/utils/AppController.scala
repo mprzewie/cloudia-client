@@ -15,7 +15,14 @@ private class AppController extends Actor {
   override def receive: Receive = {
     case Request(nodeName: String) => {
       println(s"pinged by $nodeName")
-      nodeMap.put(nodeName, sender)
+      if(!nodeMap.keys.exists(_==nodeName)){
+        nodeMap.put(nodeName, sender)
+        println(s"$nodeName registered")
+        //TODO send positive message back to sender
+      } else {
+        println(s"$nodeName already exists!")
+        //TODO send appropriate message back to sender
+      }
     }
     case Ping() => sender ! nodes()
     case ReceiveTimeout => nodeMap = nodeMap

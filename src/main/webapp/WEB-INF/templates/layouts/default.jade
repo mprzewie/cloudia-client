@@ -1,5 +1,7 @@
 //-@ val title: String
 -@ val body: String
+-@ val nodeNames: Seq[String]
+-@ val servletName: String
 
 !!!
 html
@@ -8,5 +10,11 @@ html
   body
     center
       img.image(src="/assets/img/logo.png" alt="Cloudia logo" align="middle" height="125" width="400")
+    div(class="nodelist")
+      h1="Currently connected nodes"
+      -for(nodeName <- nodeNames)
+        p
+          a(href={"/" + servletName + "/" + nodeName + "/"})
+            =nodeName
     #content
       != body

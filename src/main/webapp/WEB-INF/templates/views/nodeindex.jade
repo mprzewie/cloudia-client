@@ -1,5 +1,6 @@
 -import index._
 
+-@ val nodeNames: Seq[String]
 -@ val servletName: String
 -@ val nodeName: String
 -@ val index:DirectoryIndex
@@ -8,20 +9,26 @@ h1= nodeName
 h2= "/" + index.path
 
 
-
--for(i <- index.subDirectories)
+form(method="POST" id="pushform")
     p
-        a(href={"/" + servletName+"/" + nodeName+ "/" +i.path})
-            =i.handler.getName
-        form(method="POST")
-            input(hidden=true name="json" value = '{"foo": "bar"}')
-            input(hidden=true name="filekierwa" value={i.handler.getName})
-            input(type="submit" value="push" )
+        ="Recipient node: "
+        select(name="recipient" id="select")
+            -for(node <- nodeNames.filter(_!=nodeName))
+                option(value = {node})=node
+            //option(value = "1")="kierwa"
+            //option(value = "2")="korwo"
 
--for(i <- index.subFiles)
-    p
-        a
-            =i.handler.getName
-        form(method="POST")
-            input(hidden=true name="file" value={i.handler.getName})
-            input(type="submit" value="push" )
+    -for(i <- index.subDirectories)
+        p
+            a(href={"/" + servletName+"/" + nodeName+ "/" +i.path})
+                =i.handler.getName
+            input(hidden="true" name="file" value={i.handler.getName})
+            input(type="submit" name="button" value="push" disabled={nodeNames.isEmpty.toString})
+
+
+    -for(i <- index.subFiles)
+        p
+            a
+                =i.handler.getName
+            input(hidden="true" name="file" value={i.handler.getName})
+            input(type="submit" name="button" value="push" disabled={nodeNames.isEmpty.toString})
