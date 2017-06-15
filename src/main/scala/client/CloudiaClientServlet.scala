@@ -1,7 +1,7 @@
 package client
 
 import akka.actor.{ActorRef, ActorSystem}
-import communication.Handshake
+import communication.Ping
 import index.DirectoryIndex
 
 import scala.concurrent.Await
@@ -36,11 +36,11 @@ class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
     val nodeName = params("node")
     val path = multiParams("splat").head
 
-    val nodes = Await.result(controller.ask(Handshake())(1 second).mapTo[Map[String, ActorRef]], 1 second)
+    val nodes = Await.result(controller.ask(Ping())(1 second).mapTo[Map[String, ActorRef]], 1 second)
 
     nodes.get(nodeName) match {
       case Some(actorRef) =>
-        Try(Await.result(actorRef.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)) match {
+        Try(Await.result(actorRef.ask(Ping())(1 second).mapTo[DirectoryIndex], 1 second)) match {
           case scala.util.Success(index) => IndexUtils.indexAt(index, path) match {
             case Some(found) => jade("nodeindex", "servletName" -> servletName, "nodeName" -> nodeName, "index" -> found)
             case _ => jade("error", "reason" -> "No such directory!")
