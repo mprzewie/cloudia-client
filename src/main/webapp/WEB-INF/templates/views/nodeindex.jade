@@ -1,13 +1,17 @@
 -import index._
 
+-@ val servletName: String
+-@ val nodeName: String
 -@ val index:DirectoryIndex
 
-h1= "Home Node:"
-h2="~/" + index.path
+h1= nodeName
+h2= "/" + index.path
+
+
 
 -for(i <- index.subDirectories)
     p
-        a(href={i.path})
+        a(href={"/"+servletName+"/" + nodeName+ "/" +i.path})
             =i.handler.getName
         form(method="POST")
             input(hidden=true name="file" value={i.handler.getName})

@@ -10,36 +10,37 @@ import akka.pattern.ask
 import utils.{AppController, IndexUtils, JsonUtils, NodeData}
 
 
-
-
-
-class CloudiaClientServlet extends CloudiaclientStack {
+class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
 
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
   implicit val system = ActorSystem("cloudia-client")
   val controller = new AppController()
-//  val homeNode = NodeData("cloudia-server", "127.0.0.1", 8888, "server")
+
+  before(){
+    contentType="text/html"
+  }
 
   get("/"){
-    "Welcome to cloudia!"
+    jade("start")
   }
 
-  get("/*"){
-    redirect(s"/${multiParams("splat").head}/ ")
+  get("/:node"){
+    redirect(s"/$servletName/${params("node")}/ ")
   }
 
 
-  get("/*/*") {
+
+  get("/:node/*") {
     contentType="text/html"
-    val nodeName = multiParams("splat").head
-    val path = multiParams("splat").tail.head
+    val nodeName = params("node")//.head
+    val path = multiParams("splat").head
 
     controller.nodes().get(nodeName) match {
       case Some(data) => data.ref match {
           case Some(actorRef) =>{
             val index = Await.result(actorRef.ask(Handshake())(1 second).mapTo[DirectoryIndex], 1 second)
             IndexUtils.indexAt(index, path) match {
-              case Some(found) => jade("homeindex", "index" -> found)
+              case Some(found) => jade("nodeindex","servletName" -> servletName, "nodeName" -> nodeName, "index" -> found)
               case _ => jade("error", "reason" -> "No such directory!")
             }
           }
@@ -50,12 +51,20 @@ class CloudiaClientServlet extends CloudiaclientStack {
 
   }
 
-  post("/home/*"){
+
+  post("/register"){
+    "registered!"
+
+  }
+
+  post("/:node/*"){
+    val nodeName = params("node")
     val path = multiParams("splat").head
     val filename = params("file")
     print("gonna push file ")
     println(path + "/" + filename)
     redirect("/home/"+path)
   }
+
 
 }
