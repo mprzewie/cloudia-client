@@ -4,7 +4,7 @@ import javax.servlet.ServletContext
 
 class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
-    val servletName = "node"
-    context.mount(new CloudiaClientServlet(servletName), s"/$servletName/*")
+    implicit val servletName = "node"
+    context.mount(new CloudiaClientServlet(), s"/$servletName/*")
   }
 }
