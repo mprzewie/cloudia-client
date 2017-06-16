@@ -16,13 +16,26 @@ object IndexUtils {
     }
   }
 
-  def indexAt(root: DirectoryIndex, path: String): Option[DirectoryIndex]={
-    def searchForAt(index: DirectoryIndex, path:List[String]): Option[DirectoryIndex] ={
+  def indexAt(root: DirectoryIndex, path: String): Option[Index]={
+    def searchForAt(index: DirectoryIndex, path:List[String]): Option[Index] ={
+      println(s"path: $path")
+      println(s"index: ${index.path}")
       path match {
+        case Nil => Some(index)
         case h::t =>
-          if(index.subDirectories.exists(_.handler.getName==h)) searchForAt(index.subDirectories.filter(_.handler.getName==h).head, t)
+          val toSearchIn = t match{
+              case Nil => index.subDirectories++index.subFiles
+              case _ => index.subDirectories
+            }
+
+          if(toSearchIn.exists(_.handler.getName==h)) {
+            toSearchIn.filter(_.handler.getName==h).head match{
+              case dirIndex: DirectoryIndex => searchForAt(dirIndex, t)
+              case fileIndex: FileIndex => Some(fileIndex)
+              case _ => None
+            }
+          }
           else None
-        case _ => Some(index)
       }
     }
     searchForAt(root, path.split("/").toList.filter(!_.isEmpty) )
