@@ -7,21 +7,25 @@ import index.{DirectoryIndex, FileIndex}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
-import utils.{AppController, IndexUtils}
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import utils.{NodeController, IndexUtils, IpUtils}
 
+import scala.collection.mutable
 import scala.util.Try
 
 
 class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
 
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
-  implicit val system = ActorSystem("client")
-  val controller = system.actorOf(AppController.props(), "controller")
+  println(IpUtils.inet())
 
-  def nodes(timeout: FiniteDuration = 1 second) = {
-    Await.result(controller.ask(Ping())(timeout).mapTo[Map[String, ActorRef]], timeout)
-  }
-  def jadeNodeNames() = "nodeNames" -> nodes().keys.toList
+  implicit val system = ActorSystem("client",
+    ConfigFactory.load().withValue("akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(IpUtils.inet())))
+  private val nodeMap = new mutable.HashMap[String, ActorRef]()
+  val controller = system.actorOf(NodeController.props(nodeMap), "controller")
+
+  def nodes(): Map[String, ActorRef] =nodeMap.toMap
+  def jadeNodeNames(): (String, List[String]) = "nodeNames" -> nodes().keys.toList
 
   before(){
     contentType="text/html"
@@ -45,7 +49,7 @@ class CloudiaClientServlet(servletName: String) extends CloudiaclientStack {
       case Some(actorRef) =>
         Try(Await.result(actorRef.ask(Ping())(1 second).mapTo[DirectoryIndex], 1 second)) match {
           case scala.util.Success(index) => IndexUtils.indexAt(index, path) match {
-            case Some(found: DirectoryIndex) => jade("nodeindex", "servletName" -> servletName, "nodeName" -> nodeName, "index" -> found, jadeNodeNames())
+            case Some(found: DirectoryIndex) => jade("nodeindex", "index" -> found, "nodeName" -> nodeName, "servletName" -> servletName,   jadeNodeNames())
             case Some(found: FileIndex) => jade("error", "reason" -> s"${found.handler.getName} is a file", jadeNodeNames(), "servletName" -> servletName)
             case _ => jade("error", "reason" -> "No such directory!", jadeNodeNames(), "servletName" -> servletName)
           }
