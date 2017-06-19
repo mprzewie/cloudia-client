@@ -17,10 +17,16 @@ form(method="POST" id="pushform")
                 option(value = {node})=node
 
 
-    -for(i <- index.subDirectories)
+    -for(i <- (index.subDirectories ++ index.subFiles))
         p
-            a(href={"/" + servletName+"/" + nodeName+ "/" +i.path})
+            -i match {
+            -case _:FileIndex =>
                 =i.handler.getName
+            -case _:DirectoryIndex =>
+                a(href={"./"+i.handler.getName() + "/"})
+                    =i.handler.getName
+            -}
+
             -if(nodeNames.filter(_!=nodeName)!=List())
                 button(type="submit" name="file" value={i.handler.getName})
                     ="push"
@@ -29,13 +35,3 @@ form(method="POST" id="pushform")
                     ="push"
 
 
-    -for(i <- index.subFiles)
-        p
-            a
-                =i.handler.getName
-            -if(nodeNames.filter(_!=nodeName)!=List())
-                button(type="submit" name="file" value={i.handler.getName})
-                    ="push"
-            -else
-                button(type="submit"  disabled name="file" value={i.handler.getName})
-                    ="push"

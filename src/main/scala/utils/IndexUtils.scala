@@ -18,8 +18,8 @@ object IndexUtils {
 
   def indexAt(root: DirectoryIndex, path: String): Option[Index]={
     def searchForAt(index: DirectoryIndex, path:List[String]): Option[Index] ={
-      println(s"path: $path")
-      println(s"index: ${index.path}")
+//      println(s"path: $path")
+//      println(s"index: ${index.path}")
       path match {
         case Nil => Some(index)
         case h::t =>

@@ -15,13 +15,14 @@ import scala.collection.mutable
 import scala.util.Try
 
 
-class CloudiaClientServlet(implicit servletName: String) extends CloudiaclientStack {
+class CloudiaClientServlet() extends CloudiaclientStack {
 
   private val nodeMap = new mutable.HashMap[String, ActorRef]()
   implicit def nodes = nodeMap.toMap
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
   implicit val system = ActorSystem("client",
     ConfigFactory.load().withValue("akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(IpUtils.inet())))
+  implicit def servletName = request.getServletPath
   val controller = system.actorOf(NodeController.props(nodeMap), "controller")
   println(IpUtils.inet())
 
@@ -35,16 +36,14 @@ class CloudiaClientServlet(implicit servletName: String) extends CloudiaclientSt
     jade("start", Jade.servletName , Jade.nodeNames)
   }
 
-  get("/:node"){
-    redirect(s"/$servletName/${params("node")}/ ")
-  }
+//  get("/:node"){
+//    redirect(s"/$servletName/${params("node")}/ ")
+//  }
 
   get("/:node/*") {
     contentType="text/html"
     val nodeName = params("node")
     val path = multiParams("splat").head
-
-
     nodes.get(nodeName) match {
       case Some(actorRef) =>
         Try(Await.result(actorRef.ask(Ping())(1 second).mapTo[DirectoryIndex], 1 second)) match {
@@ -79,6 +78,11 @@ class CloudiaClientServlet(implicit servletName: String) extends CloudiaclientSt
     }
     println(params)
     redirect(s"/$servletName/${params("node")}/${multiParams("splat").head}")
+  }
+
+  get("*"){
+    if(request.getPathInfo.endsWith("/")) pass()
+    else redirect(s"$servletName${request.getPathInfo}/ ")
   }
 
 

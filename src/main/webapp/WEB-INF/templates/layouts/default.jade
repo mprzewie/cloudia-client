@@ -14,7 +14,7 @@ html
       h1="Currently connected nodes"
       -for(nodeName <- nodeNames)
         p
-          a(href={"/" + servletName + "/" + nodeName + "/"})
+          a(href={ servletName + "/" + nodeName + "/"})
             =nodeName
     #content
       != body
