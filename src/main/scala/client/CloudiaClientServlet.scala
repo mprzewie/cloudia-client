@@ -77,7 +77,8 @@ class CloudiaClientServlet() extends CloudiaclientStack {
       case _ => jade("error", Jade.error("No such node!"), Jade.nodeNames, Jade.servletName)
     }
     println(params)
-    redirect(s"/$servletName/${params("node")}/${multiParams("splat").head}")
+    println(s"$servletName${request.getPathInfo}/ ")
+    redirect(s"$servletName/${params("node")}/${multiParams("splat").head}")
   }
 
   get("*"){
