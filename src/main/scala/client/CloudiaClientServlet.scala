@@ -15,33 +15,34 @@ import scala.collection.mutable
 import scala.util.Try
 
 
-class CloudiaClientServlet() extends CloudiaclientStack {
+class CloudiaClientServlet() extends CloudiaClientStack {
 
   private val nodeMap = new mutable.HashMap[String, ActorRef]()
+
   implicit def nodes = nodeMap.toMap
+
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
-  implicit val system = ActorSystem("client",
-    ConfigFactory.load().withValue("akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(IpUtils.inet())))
+  implicit val system = ActorSystem("client")
+
   implicit def servletName = request.getServletPath
+
   val controller = system.actorOf(NodeController.props(nodeMap), "controller")
-  println(IpUtils.inet())
 
 
-
-  before(){
-    contentType="text/html"
+  before() {
+    contentType = "text/html"
   }
 
-  get("/"){
-    jade("start", Jade.servletName , Jade.nodeNames)
+  get("/") {
+    jade("start", Jade.servletName, Jade.nodeNames)
   }
 
-//  get("/:node"){
-//    redirect(s"/$servletName/${params("node")}/ ")
-//  }
+  get("/:node") {
+    redirect(s"/$servletName/${params("node")}/")
+  }
 
   get("/:node/*") {
-    contentType="text/html"
+    contentType = "text/html"
     val nodeName = params("node")
     val path = multiParams("splat").head
     nodes.get(nodeName) match {
@@ -53,27 +54,27 @@ class CloudiaClientServlet() extends CloudiaclientStack {
             case _ => jade("error", Jade.error("No such directory!"), Jade.nodeNames, Jade.servletName)
           }
           case _ => jade("error", Jade.error("Node disconnected!"), Jade.nodeNames, Jade.servletName)
-      }
+        }
       case _ => jade("error", Jade.error("No such node!"), Jade.nodeNames, Jade.servletName)
     }
   }
 
 
-  post("/:node/*"){
+  post("/:node/*") {
     val nodesMap = nodes
     val filename = params("file")
     val path = multiParams("splat").head
     (nodesMap.get(params("node")), nodesMap.get(params("recipient"))) match {
       case (Some(sender), Some(recipient)) => Try(Await.result(sender.ask(Ping())(1 second).mapTo[DirectoryIndex], 1 second)) match {
-          case scala.util.Success(index) => IndexUtils.indexAt(index, s"$path/$filename") match {
-            case Some(found: FileIndex) => {
-              sender.tell(Request(found), recipient)
-            }
-            case Some(found: DirectoryIndex) => println(s"directory")
-            case _ => jade("error", Jade.error(s"$path not found"), Jade.nodeNames, Jade.servletName)
+        case scala.util.Success(index) => IndexUtils.indexAt(index, s"$path/$filename") match {
+          case Some(found: FileIndex) => {
+            sender.tell(Request(found), recipient)
           }
-          case _ => jade("error", Jade.error("Node disconnected!"), Jade.nodeNames, Jade.servletName)
+          case Some(found: DirectoryIndex) => println(s"directory")
+          case _ => jade("error", Jade.error(s"$path not found"), Jade.nodeNames, Jade.servletName)
         }
+        case _ => jade("error", Jade.error("Node disconnected!"), Jade.nodeNames, Jade.servletName)
+      }
       case _ => jade("error", Jade.error("No such node!"), Jade.nodeNames, Jade.servletName)
     }
     println(params)
@@ -81,10 +82,8 @@ class CloudiaClientServlet() extends CloudiaclientStack {
     redirect(s"$servletName/${params("node")}/${multiParams("splat").head}")
   }
 
-  get("*"){
-    if(request.getPathInfo.endsWith("/")) pass()
+  get("*") {
+    if (request.getPathInfo.endsWith("/")) pass()
     else redirect(s"$servletName${request.getPathInfo}/ ")
   }
-
-
 }

@@ -2,12 +2,12 @@ package client
 
 import org.scalatra._
 import scalate.ScalateSupport
-import org.fusesource.scalate.{ TemplateEngine, Binding }
+import org.fusesource.scalate.{TemplateEngine, Binding}
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
 import javax.servlet.http.HttpServletRequest
 import collection.mutable
 
-trait CloudiaclientStack extends ScalatraServlet with ScalateSupport {
+trait CloudiaClientStack extends ScalatraServlet with ScalateSupport {
 
   notFound {
     // remove content type in case it was set through an action

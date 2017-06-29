@@ -24,7 +24,7 @@ private class NodeController(nodeMap: mutable.HashMap[String, ActorRef]) extends
   override def receive: Receive = {
     case Request(nodeName: String) => {
       println(s"pinged by $nodeName")
-      if(!nodeMap.keys.exists(_==nodeName)){
+      if (!nodeMap.keys.exists(_ == nodeName)) {
         nodeMap.put(nodeName, sender)
         println(s"$nodeName registered")
         //TODO send positive message back to sender
@@ -34,7 +34,7 @@ private class NodeController(nodeMap: mutable.HashMap[String, ActorRef]) extends
       }
     }
     case ReceiveTimeout => {
-      nodeMap.par.foreach{case (name, nodeRef) =>
+      nodeMap.par.foreach { case (name, nodeRef) =>
         Try(Await.result(nodeRef.ask(Ping()), 1 second)) match {
           case Failure(_) => nodeMap.remove(name)
           case _ => ()
@@ -44,11 +44,9 @@ private class NodeController(nodeMap: mutable.HashMap[String, ActorRef]) extends
     }
     case _ => println("WTF")
   }
-
 }
 
 
 object NodeController {
   def props(nodeMap: mutable.HashMap[String, ActorRef]) = Props(new NodeController(nodeMap))
-
 }

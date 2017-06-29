@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
   */
 object IpUtils {
 
-  def inet() ={
+  def inet() = {
     val ips = new ListBuffer[String]()
     val interface = NetworkInterface.getNetworkInterfaces
     val n = interface.nextElement match {
@@ -24,7 +24,5 @@ object IpUtils {
       }
     }
     ips.filter(_.startsWith("192.168")).head
-
   }
-
 }
