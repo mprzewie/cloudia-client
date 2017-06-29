@@ -10,7 +10,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 /**
   * Created by marcin on 6/15/17.
@@ -27,10 +27,8 @@ private class NodeController(nodeMap: mutable.HashMap[String, ActorRef]) extends
       if (!nodeMap.keys.exists(_ == nodeName)) {
         nodeMap.put(nodeName, sender)
         println(s"$nodeName registered")
-        //TODO send positive message back to sender
       } else {
         println(s"$nodeName already exists!")
-        //TODO send appropriate message back to sender
       }
     }
     case ReceiveTimeout => {
@@ -42,7 +40,7 @@ private class NodeController(nodeMap: mutable.HashMap[String, ActorRef]) extends
       }
       context.setReceiveTimeout(timeout.duration)
     }
-    case _ => println("WTF")
+    case _ => println("Sth else has happenned")
   }
 }
 

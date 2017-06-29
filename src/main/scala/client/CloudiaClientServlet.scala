@@ -8,8 +8,7 @@ import akka.pattern.ask
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import utils.Jade
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
-import utils.{NodeController, IndexUtils, IpUtils}
+import utils.{NodeController, IndexUtils}
 
 import scala.collection.mutable
 import scala.util.Try
@@ -19,15 +18,14 @@ class CloudiaClientServlet() extends CloudiaClientStack {
 
   private val nodeMap = new mutable.HashMap[String, ActorRef]()
 
-  implicit def nodes = nodeMap.toMap
+  implicit def nodes: Map[String, ActorRef] = nodeMap.toMap
 
   implicit val timeout = akka.util.Timeout(new FiniteDuration(1, SECONDS)) // Timeout for the resolveOne call
   implicit val system = ActorSystem("client")
 
-  implicit def servletName = request.getServletPath
+  implicit def servletName: String = request.getServletPath
 
-  val controller = system.actorOf(NodeController.props(nodeMap), "controller")
-
+  val controller: ActorRef = system.actorOf(NodeController.props(nodeMap), "controller")
 
   before() {
     contentType = "text/html"

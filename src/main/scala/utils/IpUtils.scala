@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
   */
 object IpUtils {
 
-  def inet() = {
+  def inet(): String = {
     val ips = new ListBuffer[String]()
     val interface = NetworkInterface.getNetworkInterfaces
     val n = interface.nextElement match {
